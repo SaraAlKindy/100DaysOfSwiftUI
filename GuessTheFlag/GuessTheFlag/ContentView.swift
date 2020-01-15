@@ -17,11 +17,20 @@ struct ContentView: View {
     @State private var scoreTitle = ""
     @State private var score = "0"
     
+    @State private var opacityAmount = 1.0
+    @State private var rotationAmount = 0.0
+    
     func flagTapped(_ number: Int) {
         var curScore = Int(score) ?? 0
         if number == correctAnswer {
             scoreTitle = "Correct"
             curScore += 1
+            rotationAmount = 0.0
+            
+            withAnimation(.interpolatingSpring(stiffness: 20, damping: 5)) {
+                self.rotationAmount = 360
+            }
+            
         } else {
             scoreTitle = "Wrong. You tapped the flag \(countries[number])"
         }
@@ -31,8 +40,13 @@ struct ContentView: View {
     }
     
      func askQuestion() {
-         countries.shuffle()
-         correctAnswer = Int.random(in: 0...2)
+        countries.shuffle()
+        correctAnswer = Int.random(in: 0...2)
+        withAnimation(.easeInOut) {
+            self.opacityAmount = 1.0
+        }
+        
+        self.rotationAmount = 0.0
      }
     
     var body: some View {
@@ -55,9 +69,12 @@ struct ContentView: View {
                 ForEach(0 ..< 3) { number in
                     Button(action: {
                         self.flagTapped(number)
+                        self.opacityAmount = 0.25
                     }) {
                         FlagImage(imageName: self.countries[number])
                     }
+                    .opacity(number == self.correctAnswer ? 1 : self.opacityAmount)
+                    .rotation3DEffect(.degrees(number == self.correctAnswer ? self.rotationAmount : 0), axis: (x: 0, y: 1, z: 0))
                 }
                 
                 Text("Current score is \(score)")
